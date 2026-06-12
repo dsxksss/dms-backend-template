@@ -1,0 +1,12 @@
+# 工作区级 Cargo 配置。
+#
+# 离线 / air-gapped 构建：提交 .sqlx 查询缓存后，取消下面注释即可无需活库编译。
+# [env]
+# SQLX_OFFLINE = "true"
+
+# 私有化 / 内网无法访问 crates.io 时，配置私有镜像源后取消注释：
+# [source.crates-io]
+# replace-with = "internal-mirror"
+#
+# [source.internal-mirror]
+# registry = "sparse+https://your-mirror.internal/index/"

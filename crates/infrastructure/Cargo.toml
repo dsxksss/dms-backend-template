@@ -1,0 +1,44 @@
+[package]
+name = "dms-infrastructure"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+dms-core.workspace = true
+dms-application.workspace = true
+tracing.workspace = true
+async-trait.workspace = true
+dms-config = { workspace = true, optional = true }
+dms-domain = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+argon2 = { workspace = true, optional = true }
+jsonwebtoken = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+
+[features]
+# 基础数据库：连接池、迁移、就绪探针。
+database = ["dep:sqlx", "dep:dms-config"]
+# 多租户 RLS：租户作用域事务 + tenants 迁移。
+multi-tenancy = ["database", "dep:uuid"]
+# 身份联合：认证 provider、IAM 仓储、IAM 迁移。
+auth = [
+    "multi-tenancy",
+    "dep:dms-domain",
+    "dms-domain/auth",
+    "dms-application/auth",
+    "dep:argon2",
+    "dep:jsonwebtoken",
+    "dep:serde_json",
+    "dep:chrono",
+]
+# 审计日志 + 事务性发件箱（含后台中继）。
+audit = ["multi-tenancy", "dep:serde_json", "dep:tokio"]
+# Project 切片仓储（同事务写状态+审计+发件箱）。
+project = ["auth", "audit", "dms-domain/project"]

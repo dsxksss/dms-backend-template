@@ -1,0 +1,10 @@
+# 云端多租户 SaaS 环境覆盖。APP_ENV=cloud 时生效。
+# 数据库连接串与密钥经环境变量/密钥管理注入，不写在此。
+
+[database]
+max_connections = 50
+run_migrations_on_start = false
+
+[observability]
+format = "json"
+level = "info,sqlx=warn"

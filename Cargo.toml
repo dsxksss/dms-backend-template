@@ -1,0 +1,102 @@
+# DMS 后端工作区（Cargo workspace）
+#
+# 分层（依赖只能指向内层）：
+#   core ← config ← domain ← application ← {infrastructure, api} ← server(组合根)
+#
+# 统一在 [workspace.dependencies] 锁定第三方依赖版本，各 crate 用
+# `dep.workspace = true` 引用，保证整库版本一致、升级集中。
+[workspace]
+resolver = "3"
+members = [
+    "crates/core",
+    "crates/config",
+    "crates/domain",
+    "crates/application",
+    "crates/infrastructure",
+    "crates/api",
+    "bin/server",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+license = "MIT"
+authors = ["DMS Team"]
+publish = false
+
+[workspace.dependencies]
+# ---- 内部 crate ----
+dms-core = { path = "crates/core" }
+dms-config = { path = "crates/config" }
+dms-domain = { path = "crates/domain" }
+dms-application = { path = "crates/application" }
+dms-infrastructure = { path = "crates/infrastructure" }
+dms-api = { path = "crates/api" }
+
+# ---- 异步运行时 / Web ----
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.8", features = ["macros"] }
+tower = { version = "0.5", features = ["util", "timeout", "limit"] }
+tower-http = { version = "0.6", features = [
+    "trace",
+    "cors",
+    "compression-gzip",
+    "request-id",
+    "timeout",
+    "catch-panic",
+    "sensitive-headers",
+] }
+
+# ---- 数据库 ----
+sqlx = { version = "0.8", default-features = false, features = [
+    "runtime-tokio",
+    "tls-rustls",
+    "postgres",
+    "uuid",
+    "chrono",
+    "json",
+    "migrate",
+    "macros",
+] }
+
+# ---- 序列化 / 错误 ----
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+
+# ---- 可观测性 ----
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+
+# ---- 配置 ----
+figment = { version = "0.10", features = ["toml", "env"] }
+
+# ---- 通用类型 ----
+uuid = { version = "1", features = ["v4", "v7", "serde"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+async-trait = "0.1"
+
+# ---- 认证 / 身份联合 ----
+jsonwebtoken = "9"
+argon2 = "0.5"
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# ---- 校验 ----
+validator = { version = "0.18", features = ["derive"] }
+
+# ---- 哈希（刷新令牌摘要） ----
+sha2 = "0.10"
+hex = "0.4"
+
+# 统一的 release 构建优化：体积更小、运行更快（私有化交付友好）
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+panic = "unwind"

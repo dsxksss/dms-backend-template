@@ -1,0 +1,5 @@
+# 锁定工具链版本，保证 CI / 本地 / 私有化构建一致可复现。
+[toolchain]
+channel = "1.94.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

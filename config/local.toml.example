@@ -1,0 +1,16 @@
+# 本地开发配置。复制为 config/local.toml（已被 .gitignore 忽略）后按需修改。
+# APP_ENV=local 时生效。
+
+[database]
+# 运行时：受 RLS 约束的应用角色
+url = "postgres://dms_app:dms_app@127.0.0.1:5432/dms"
+# 迁移：拥有者角色（DDL 权限）
+migration_url = "postgres://dms:dms@127.0.0.1:5432/dms"
+run_migrations_on_start = true
+
+[auth]
+jwt_secret = "dev-only-change-me"
+
+[observability]
+format = "pretty"
+level = "debug,sqlx=warn,tower_http=debug"

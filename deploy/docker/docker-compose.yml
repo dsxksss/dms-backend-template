@@ -1,0 +1,30 @@
+# 本地开发用 Postgres。
+#   docker compose -f deploy/docker/docker-compose.yml up -d postgres
+#
+# 说明：POSTGRES_USER=dms 是超级用户（拥有者），用于运行迁移与 DDL。
+# 运行时应用以受 RLS 约束的非超级用户 dms_app 连接（见 initdb/01-app-role.sql）——
+# 这是 RLS 多租户隔离生效的前提（超级用户/BYPASSRLS 角色会绕过 RLS）。
+name: dms
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dms-postgres
+    environment:
+      POSTGRES_USER: dms
+      POSTGRES_PASSWORD: dms
+      POSTGRES_DB: dms
+    ports:
+      # 宿主端口可用 DMS_DB_PORT 覆盖（本机已有 Postgres 占用 5432 时改它）。
+      - "${DMS_DB_PORT:-5432}:5432"
+    volumes:
+      - dms_pg_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dms -d dms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dms_pg_data:

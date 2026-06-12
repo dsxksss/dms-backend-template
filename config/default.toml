@@ -1,0 +1,22 @@
+# 所有环境共享的基线配置。
+# 按环境覆盖见 config/{local,cloud,onprem}.toml；密钥仅由环境变量注入。
+
+[server]
+host = "0.0.0.0"
+port = 8080
+request_timeout_secs = 30
+
+[database]
+max_connections = 10
+acquire_timeout_secs = 5
+run_migrations_on_start = false
+
+[auth]
+issuer = "dms"
+access_ttl_secs = 900
+refresh_ttl_secs = 1209600
+
+[observability]
+format = "json"
+level = "info,sqlx=warn,tower_http=info"
+metrics_enabled = true

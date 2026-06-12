@@ -1,0 +1,22 @@
+# Rust 构建产物
+/target/
+**/*.rs.bk
+*.pdb
+
+# 本地环境与密钥（绝不提交）
+.env
+.env.*
+!.env.example
+config/local.toml
+
+# 注意：.sqlx/ 查询缓存需要提交（支持离线/CI 构建），不要忽略
+
+# 编辑器 / 操作系统
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log

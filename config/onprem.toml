@@ -1,0 +1,9 @@
+# 私有化（单租户/可离线）环境覆盖。APP_ENV=onprem 时生效。
+
+[database]
+max_connections = 20
+run_migrations_on_start = true
+
+[observability]
+format = "json"
+level = "info,sqlx=warn"

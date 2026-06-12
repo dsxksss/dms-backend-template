@@ -1,0 +1,33 @@
+# cargo-deny 供应链门禁：漏洞、许可证、来源、重复依赖。
+# 运行：cargo deny check
+
+[advisories]
+# RustSec 漏洞库；默认对存在漏洞的依赖报错。
+ignore = []
+
+[licenses]
+# 仅允许这些宽松许可证；引入 copyleft/未知许可证会失败。
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+    "MPL-2.0",
+    "CC0-1.0",
+]
+confidence-threshold = 0.8
+exceptions = []
+
+[bans]
+# 同一依赖出现多个版本只告警；通配符版本禁止。
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+# 仅允许 crates.io 与显式允许的源。
+unknown-registry = "deny"
+unknown-git = "deny"

@@ -1,0 +1,22 @@
+[package]
+name = "dms-domain"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+dms-core.workspace = true
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+chrono = { workspace = true, optional = true }
+async-trait = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
+
+[features]
+# 身份与访问管理（用户/外部身份/RBAC 端口）。无此 feature 时 domain 为空壳。
+auth = ["dep:serde", "dep:serde_json", "dep:chrono", "dep:async-trait", "dep:uuid"]
+# Project 参考切片（实体/事件/仓储端口）。
+project = ["auth"]

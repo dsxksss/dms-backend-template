@@ -1,0 +1,7 @@
+# 统一以 LF 存储文本文件，避免 Windows CRLF 污染（Linux CI/容器构建友好）。
+* text=auto eol=lf
+
+# 二进制文件不做换行转换。
+*.png binary
+*.jpg binary
+*.ico binary
