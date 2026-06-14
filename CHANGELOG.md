@@ -22,3 +22,5 @@
 - 测试体系：单元 + mock 服务测试 + 真实库集成测试范例。
 - CI/CD：GitHub Actions（fmt/clippy/分档构建/测试/cargo-deny/集成）、release 镜像构建。
 - 文档：架构、分档、部署、开发、ADR-0001..0005。
+- 评估备忘：字段级权限与用户自定义实体的可行性验证与成本分档建议
+  （`docs/notes/field-permissions-and-custom-entities.md`，仅评估、未实现）。
