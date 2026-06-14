@@ -24,3 +24,5 @@
 - 文档：架构、分档、部署、开发、ADR-0001..0005。
 - 评估备忘：字段级权限与用户自定义实体的可行性验证与成本分档建议
   （`docs/notes/field-permissions-and-custom-entities.md`，仅评估、未实现）。
+- 评估备忘：数据集模块对标 HuggingFace（Gitea+LFS 版本控制 + Parquet + DuckDB 查询的低成本
+  方案），含 DuckDB/git-lfs PoC 实测（`docs/notes/datasets-huggingface-reference.md`，仅评估）。
