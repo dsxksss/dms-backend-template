@@ -51,7 +51,9 @@ tower-http = { version = "0.6", features = [
 # ---- 数据库 ----
 sqlx = { version = "0.8", default-features = false, features = [
     "runtime-tokio",
-    "tls-rustls",
+    # ring + 内置 webpki CA 根：构建只需 cc（无 cmake/clang），运行时无需 OS 证书库。
+    # 若需信任私有 CA，改用 tls-rustls-ring-native-roots 并在镜像装 ca-certificates。
+    "tls-rustls-ring-webpki",
     "postgres",
     "uuid",
     "chrono",

@@ -1,0 +1,51 @@
+# 私有化部署：自带 Postgres 的自包含栈（app + db）。
+#   DMS_JWT_SECRET=$(openssl rand -hex 32) \
+#     docker compose -f deploy/compose/onprem.yml up -d --build
+#
+# 首次启动 app 会自动执行迁移；如需初始管理员：
+#   docker compose -f deploy/compose/onprem.yml run --rm app bootstrap
+#   （配合 BOOTSTRAP_EMAIL / BOOTSTRAP_PASSWORD 环境变量）
+name: dms-onprem
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dms
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dms}
+      POSTGRES_DB: dms
+    volumes:
+      - dms_pg_data:/var/lib/postgresql/data
+      - ../docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dms -d dms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+      args:
+        DMS_FEATURES: full
+    image: dms-server:full
+    environment:
+      APP_ENV: onprem
+      DMS__DATABASE__URL: postgres://dms_app:${DMS_APP_PASSWORD:-dms_app}@postgres:5432/dms
+      DMS__DATABASE__MIGRATION_URL: postgres://dms:${POSTGRES_PASSWORD:-dms}@postgres:5432/dms
+      DMS__DATABASE__RUN_MIGRATIONS_ON_START: "true"
+      DMS__AUTH__JWT_SECRET: ${DMS_JWT_SECRET:?set DMS_JWT_SECRET (e.g. openssl rand -hex 32)}
+      # 初始管理员（用于 `... run --rm app bootstrap`）：
+      BOOTSTRAP_EMAIL: ${BOOTSTRAP_EMAIL:-admin@example.com}
+      BOOTSTRAP_PASSWORD: ${BOOTSTRAP_PASSWORD:-}
+    ports:
+      - "${DMS_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  dms_pg_data:

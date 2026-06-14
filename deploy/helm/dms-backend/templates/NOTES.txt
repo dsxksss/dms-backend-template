@@ -1,0 +1,13 @@
+dms-backend 已部署（release: {{ .Release.Name }}，namespace: {{ .Release.Namespace }}）。
+
+环境(APP_ENV): {{ .Values.appEnv }}
+副本: {{ if .Values.autoscaling.enabled }}HPA {{ .Values.autoscaling.minReplicas }}–{{ .Values.autoscaling.maxReplicas }}{{ else }}{{ .Values.replicaCount }}{{ end }}
+启动自动迁移: {{ .Values.runMigrationsOnStart }}
+
+就绪检查：
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "dms-backend.fullname" . }} 8080:{{ .Values.service.port }}
+  curl localhost:8080/readyz
+{{- if not .Values.secret.existingSecret }}
+
+⚠ 当前使用 chart 生成的 Secret（仅测试用）。生产请设置 secret.existingSecret 引用由密钥管理注入的 Secret。
+{{- end }}

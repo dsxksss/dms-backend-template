@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dms-backend.fullname" . }}-config
+  labels:
+    {{- include "dms-backend.labels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.appEnv | quote }}
+  DMS__SERVER__HOST: "0.0.0.0"
+  DMS__SERVER__PORT: "8080"
+  DMS__DATABASE__RUN_MIGRATIONS_ON_START: {{ .Values.runMigrationsOnStart | quote }}
+  DMS__OBSERVABILITY__FORMAT: {{ .Values.observability.format | quote }}
+  DMS__OBSERVABILITY__LEVEL: {{ .Values.observability.level | quote }}

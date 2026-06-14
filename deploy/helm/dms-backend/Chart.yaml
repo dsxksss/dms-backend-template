@@ -1,0 +1,6 @@
+apiVersion: v2
+name: dms-backend
+description: DMS 后端（Rust + PostgreSQL）Helm chart —— 云端/私有化通用
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

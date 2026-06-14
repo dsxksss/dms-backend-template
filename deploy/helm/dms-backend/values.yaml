@@ -1,0 +1,74 @@
+# dms-backend 默认值（通用基线）。云端/私有化分别用 values-cloud.yaml / values-onprem.yaml 覆盖。
+
+replicaCount: 2
+
+image:
+  repository: dms-server
+  tag: full
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# 运行环境与日志
+appEnv: cloud
+runMigrationsOnStart: false
+observability:
+  format: json
+  level: "info,sqlx=warn,tower_http=info"
+
+# 数据库与密钥：生产用已有 Secret（existingSecret）；留空则用下面的值生成 Secret（仅测试）。
+secret:
+  existingSecret: ""        # 含 DMS__DATABASE__URL / DMS__DATABASE__MIGRATION_URL / DMS__AUTH__JWT_SECRET 的 Secret 名
+  databaseUrl: ""           # postgres://app:***@host:5432/dms（仅 existingSecret 为空时使用）
+  migrationUrl: ""          # 可选：迁移用拥有者连接串
+  jwtSecret: ""             # 强随机；仅 existingSecret 为空时使用
+
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: "1"
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: dms.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

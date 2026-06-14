@@ -1,0 +1,21 @@
+# 云端部署：仅应用，数据库用外部托管 PG（迁移由发布流程单独执行）。
+#   DMS_IMAGE=registry.example.com/dms-server:full \
+#   DMS_DATABASE_URL=postgres://app:***@db.internal:5432/dms \
+#   DMS_JWT_SECRET=*** \
+#     docker compose -f deploy/compose/cloud.yml up -d
+name: dms-cloud
+
+services:
+  app:
+    image: ${DMS_IMAGE:-dms-server:full}
+    environment:
+      APP_ENV: cloud
+      DMS__DATABASE__URL: ${DMS_DATABASE_URL:?set DMS_DATABASE_URL}
+      DMS__DATABASE__RUN_MIGRATIONS_ON_START: "false"
+      DMS__AUTH__JWT_SECRET: ${DMS_JWT_SECRET:?set DMS_JWT_SECRET}
+      # 可选：专有平台令牌交换 provider
+      DMS__AUTH__PLATFORM__NAME: ${DMS_PLATFORM_NAME:-}
+      DMS__AUTH__PLATFORM__JWT_SECRET: ${DMS_PLATFORM_SECRET:-}
+    ports:
+      - "${DMS_PORT:-8080}:8080"
+    restart: unless-stopped

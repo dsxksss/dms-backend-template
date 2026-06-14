@@ -1,0 +1,14 @@
+# 私有化（单租户）覆盖：少副本、启动自动迁移、内网 Ingress（按客户环境调整）。
+replicaCount: 1
+appEnv: onprem
+runMigrationsOnStart: true
+
+autoscaling:
+  enabled: false
+
+# 私有化常将连接串/密钥放入由 IaC 预置的 Secret；此处给出占位名。
+secret:
+  existingSecret: dms-backend-secrets
+
+ingress:
+  enabled: false
