@@ -1,0 +1,32 @@
+name: Release
+
+# 打 tag（v*）时构建多档镜像。推送到镜像仓库需配置 secrets（见下方注释）。
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tier: [full, minimal]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # 推送到仓库时取消注释并配置 secrets（REGISTRY / REGISTRY_USER / REGISTRY_TOKEN）：
+      # - uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ secrets.REGISTRY }}
+      #     username: ${{ secrets.REGISTRY_USER }}
+      #     password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/docker/Dockerfile
+          build-args: |
+            DMS_FEATURES=${{ matrix.tier == 'full' && 'full' || '' }}
+          push: false # 配好 registry 登录后改为 true
+          tags: dms-server:${{ github.ref_name }}-${{ matrix.tier }}

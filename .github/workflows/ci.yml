@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: fmt / clippy / build / unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.94.1
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+
+      - name: 格式
+        run: cargo fmt --all -- --check
+
+      - name: Lint（全量 feature）
+        run: cargo clippy --workspace --all-features --all-targets -- -D warnings
+
+      - name: 分档构建（minimal / multi-tenancy / full）
+        run: |
+          cargo build -p dms-server
+          cargo build -p dms-server --features multi-tenancy
+          cargo build -p dms-server --features full
+
+      - name: 单元 + mock 测试（无需数据库；集成测试 #[ignore] 跳过）
+        run: cargo test --workspace --all-features
+
+  deny:
+    name: 供应链门禁
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+
+  integration:
+    name: 集成测试（真实 Postgres）
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: dms
+          POSTGRES_PASSWORD: dms
+          POSTGRES_DB: dms
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U dms -d dms"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.94.1
+      - uses: Swatinem/rust-cache@v2
+      - name: 运行被忽略的集成测试
+        env:
+          TEST_DATABASE_URL: postgres://dms:dms@localhost:5432/dms
+        run: cargo test -p dms-infrastructure --features project -- --ignored
