@@ -81,3 +81,54 @@ impl<T> Paginated<T> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn clamps_limit_and_offset() {
+        assert_eq!(
+            PageRequest {
+                limit: 1000,
+                offset: 0
+            }
+            .clamped()
+            .limit,
+            MAX_LIMIT
+        );
+        assert_eq!(
+            PageRequest {
+                limit: 0,
+                offset: 0
+            }
+            .clamped()
+            .limit,
+            1
+        );
+        assert_eq!(
+            PageRequest {
+                limit: 10,
+                offset: -5
+            }
+            .clamped()
+            .offset,
+            0
+        );
+    }
+
+    #[test]
+    fn paginated_new_uses_clamped_page() {
+        let p = Paginated::new(
+            vec![1, 2, 3],
+            3,
+            PageRequest {
+                limit: 9999,
+                offset: -1,
+            },
+        );
+        assert_eq!(p.limit, MAX_LIMIT);
+        assert_eq!(p.offset, 0);
+        assert_eq!(p.total, 3);
+    }
+}

@@ -32,3 +32,6 @@ auth = [
 ]
 # Project 参考切片用例。
 project = ["auth", "dms-domain/project"]
+
+[dev-dependencies]
+tokio = { workspace = true }

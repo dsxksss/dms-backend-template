@@ -81,3 +81,26 @@ pub trait ProjectRepository: Send + Sync {
         expected_version: i32,
     ) -> CoreResult<()>;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn event_types() {
+        let id = ProjectId::new();
+        assert_eq!(
+            ProjectEvent::Created {
+                id,
+                name: "x".into()
+            }
+            .event_type(),
+            "project.created"
+        );
+        assert_eq!(
+            ProjectEvent::Updated { id, version: 2 }.event_type(),
+            "project.updated"
+        );
+        assert_eq!(ProjectEvent::Deleted { id }.event_type(), "project.deleted");
+    }
+}

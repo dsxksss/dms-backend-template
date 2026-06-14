@@ -132,3 +132,176 @@ impl ProjectService {
         self.repo.delete(ctx, id, expected_version).await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    //! 用内存 mock 仓储测试服务编排——无需数据库，证明端口/DI 设计的可测性。
+    use super::*;
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    use async_trait::async_trait;
+    use dms_core::{TenantId, UserId};
+
+    #[derive(Default)]
+    struct MockProjectRepo {
+        items: Mutex<HashMap<uuid::Uuid, Project>>,
+    }
+
+    #[async_trait]
+    impl ProjectRepository for MockProjectRepo {
+        async fn create(&self, ctx: &RequestContext, input: NewProject) -> CoreResult<Project> {
+            let project = Project {
+                id: ProjectId::new(),
+                tenant_id: ctx.tenant_id,
+                name: input.name,
+                description: input.description,
+                version: 1,
+            };
+            self.items
+                .lock()
+                .unwrap()
+                .insert(project.id.as_uuid(), project.clone());
+            Ok(project)
+        }
+
+        async fn get(&self, _tenant: TenantId, id: ProjectId) -> CoreResult<Option<Project>> {
+            Ok(self.items.lock().unwrap().get(&id.as_uuid()).cloned())
+        }
+
+        async fn list(
+            &self,
+            _tenant: TenantId,
+            page: PageRequest,
+        ) -> CoreResult<Paginated<Project>> {
+            let items: Vec<Project> = self.items.lock().unwrap().values().cloned().collect();
+            let total = items.len() as i64;
+            Ok(Paginated::new(items, total, page))
+        }
+
+        async fn update(
+            &self,
+            _ctx: &RequestContext,
+            id: ProjectId,
+            input: UpdateProject,
+        ) -> CoreResult<Project> {
+            let mut guard = self.items.lock().unwrap();
+            let project = guard
+                .get_mut(&id.as_uuid())
+                .ok_or_else(|| CoreError::NotFound("not found".into()))?;
+            if project.version != input.expected_version {
+                return Err(CoreError::Conflict("version".into()));
+            }
+            if let Some(name) = input.name {
+                project.name = name;
+            }
+            if let Some(description) = input.description {
+                project.description = description;
+            }
+            project.version += 1;
+            Ok(project.clone())
+        }
+
+        async fn delete(
+            &self,
+            _ctx: &RequestContext,
+            id: ProjectId,
+            expected_version: i32,
+        ) -> CoreResult<()> {
+            let mut guard = self.items.lock().unwrap();
+            let project = guard
+                .get(&id.as_uuid())
+                .ok_or_else(|| CoreError::NotFound("not found".into()))?;
+            if project.version != expected_version {
+                return Err(CoreError::Conflict("version".into()));
+            }
+            guard.remove(&id.as_uuid());
+            Ok(())
+        }
+    }
+
+    fn ctx() -> RequestContext {
+        RequestContext::for_user(uuid::Uuid::now_v7(), TenantId::new(), UserId::new())
+    }
+
+    fn service() -> ProjectService {
+        ProjectService::new(Arc::new(MockProjectRepo::default()))
+    }
+
+    #[tokio::test]
+    async fn create_rejects_empty_name() {
+        let err = service()
+            .create(
+                &ctx(),
+                CreateProjectRequest {
+                    name: "   ".into(),
+                    description: String::new(),
+                },
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(err, CoreError::Validation(_)));
+    }
+
+    #[tokio::test]
+    async fn crud_and_optimistic_lock() {
+        let svc = service();
+        let c = ctx();
+
+        let created = svc
+            .create(
+                &c,
+                CreateProjectRequest {
+                    name: "Alpha".into(),
+                    description: "d".into(),
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(created.version, 1);
+
+        let fetched = svc.get(c.tenant_id, created.id).await.unwrap();
+        assert_eq!(fetched.name, "Alpha");
+
+        let updated = svc
+            .update(
+                &c,
+                created.id,
+                UpdateProjectRequest {
+                    name: Some("Beta".into()),
+                    description: None,
+                    version: 1,
+                },
+            )
+            .await
+            .unwrap();
+        assert_eq!(updated.version, 2);
+        assert_eq!(updated.name, "Beta");
+
+        // 旧版本更新 → 冲突。
+        let conflict = svc
+            .update(
+                &c,
+                created.id,
+                UpdateProjectRequest {
+                    name: None,
+                    description: None,
+                    version: 1,
+                },
+            )
+            .await
+            .unwrap_err();
+        assert!(matches!(conflict, CoreError::Conflict(_)));
+
+        // 旧版本删除 → 冲突；正确版本 → 成功；删后查不到。
+        assert!(matches!(
+            svc.delete(&c, created.id, 1).await.unwrap_err(),
+            CoreError::Conflict(_)
+        ));
+        svc.delete(&c, created.id, 2).await.unwrap();
+        assert!(matches!(
+            svc.get(c.tenant_id, created.id).await.unwrap_err(),
+            CoreError::NotFound(_)
+        ));
+    }
+}
