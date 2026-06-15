@@ -13,6 +13,8 @@
 pub mod auth;
 #[cfg(feature = "auth")]
 pub mod dto;
+#[cfg(feature = "orgs")]
+pub mod orgs;
 pub mod port;
 #[cfg(feature = "project")]
 pub mod project;

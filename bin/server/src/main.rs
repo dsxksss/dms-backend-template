@@ -37,12 +37,16 @@ async fn main() -> anyhow::Result<()> {
     let metrics = dms_core::telemetry::init_metrics();
     tracing::info!(env = %config.env, "starting dms-server");
 
-    // 按档装配 AppState（只有一个分支会被编译进来）。
+    // 按档装配 AppState（结构体字面量，字段按 feature 门控，只有一个分支会被编译）。
     let state = {
         #[cfg(not(feature = "database"))]
         {
             let health: Arc<dyn HealthProbe> = Arc::new(AlwaysReady);
-            dms_api::AppState::new(Arc::new(config.clone()), metrics, health)
+            dms_api::AppState {
+                config: Arc::new(config.clone()),
+                metrics,
+                health,
+            }
         }
         #[cfg(feature = "database")]
         {
@@ -62,28 +66,16 @@ async fn main() -> anyhow::Result<()> {
             #[cfg(feature = "audit")]
             spawn_outbox_relay(&config);
 
-            #[cfg(not(feature = "auth"))]
-            {
-                dms_api::AppState::new(Arc::new(config.clone()), metrics, health)
-            }
-            #[cfg(feature = "auth")]
-            {
-                let auth = build_auth_service(&config, &pool);
-                #[cfg(not(feature = "project"))]
-                {
-                    dms_api::AppState::new(Arc::new(config.clone()), metrics, health, auth)
-                }
+            dms_api::AppState {
+                config: Arc::new(config.clone()),
+                metrics,
+                health,
+                #[cfg(feature = "auth")]
+                auth: build_auth_service(&config, &pool),
                 #[cfg(feature = "project")]
-                {
-                    let projects = build_project_service(&pool);
-                    dms_api::AppState::new(
-                        Arc::new(config.clone()),
-                        metrics,
-                        health,
-                        auth,
-                        projects,
-                    )
-                }
+                projects: build_project_service(&pool),
+                #[cfg(feature = "orgs")]
+                orgs: build_org_service(&pool),
             }
         }
     };
@@ -161,6 +153,16 @@ fn build_project_service(pool: &sqlx::PgPool) -> Arc<dms_application::project::P
         pool.clone(),
     ));
     Arc::new(dms_application::project::ProjectService::new(repo))
+}
+
+/// 组装组织架构用例服务。
+#[cfg(feature = "orgs")]
+fn build_org_service(pool: &sqlx::PgPool) -> Arc<dms_application::orgs::OrgService> {
+    let orgs = Arc::new(dms_infrastructure::orgs::PgOrgRepository::new(pool.clone()));
+    let grants = Arc::new(dms_infrastructure::orgs::PgGrantRepository::new(
+        pool.clone(),
+    ));
+    Arc::new(dms_application::orgs::OrgService::new(orgs, grants))
 }
 
 /// 启动发件箱中继后台任务（拥有者连接，绕过 RLS 扫描全部租户）。

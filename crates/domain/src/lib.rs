@@ -10,6 +10,8 @@
 
 #[cfg(feature = "auth")]
 pub mod iam;
+#[cfg(feature = "orgs")]
+pub mod orgs;
 #[cfg(feature = "auth")]
 pub mod ports;
 #[cfg(feature = "project")]

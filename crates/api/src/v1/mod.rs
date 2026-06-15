@@ -1,6 +1,8 @@
 //! v1 API 路由。
 
 mod auth;
+#[cfg(feature = "orgs")]
+mod orgs;
 #[cfg(feature = "project")]
 mod projects;
 
@@ -27,6 +29,19 @@ pub fn router() -> Router<AppState> {
                 .patch(projects::update)
                 .delete(projects::delete),
         );
+
+    #[cfg(feature = "orgs")]
+    let router = router
+        .route("/orgs", post(orgs::create_org).get(orgs::list_orgs))
+        .route("/orgs/{id}/members", post(orgs::add_org_member))
+        .route("/orgs/{id}/teams", get(orgs::list_teams))
+        .route("/teams", post(orgs::create_team))
+        .route("/teams/{id}/members", post(orgs::add_team_member))
+        .route(
+            "/role-grants",
+            post(orgs::grant_role).delete(orgs::revoke_role),
+        )
+        .route("/me/permissions", get(orgs::my_permissions));
 
     router
 }

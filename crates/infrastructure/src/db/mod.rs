@@ -91,6 +91,8 @@ pub async fn run_migrations(url: &str) -> Result<(), CoreError> {
     run_one(&pool, sqlx::migrate!("../../migrations/audit")).await?;
     #[cfg(feature = "project")]
     run_one(&pool, sqlx::migrate!("../../migrations/project")).await?;
+    #[cfg(feature = "orgs")]
+    run_one(&pool, sqlx::migrate!("../../migrations/orgs")).await?;
 
     pool.close().await;
     Ok(())

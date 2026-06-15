@@ -50,9 +50,10 @@ core ← config ← domain ← application ← {infrastructure, api} ← server(
 | `database` | + 连接池 / 迁移 / 就绪探针 | `... --features database` |
 | `multi-tenancy` | + 行级 RLS 多租户 | `... --features multi-tenancy` |
 | `auth` | + 身份联合 / 会话 / RBAC / `/v1/auth` | `... --features auth` |
+| `orgs` | + 组织/团队层级 + 资源协作者 + 作用域累积权限（对标 Benchling） | `... --features orgs` |
 | `full` | 全部企业能力 | `... --features full` |
 
-依赖：`project → auth → multi-tenancy → database`，`audit → database`（上层自动带下层）。
+依赖：`project → auth → multi-tenancy → database`，`audit → database`，`orgs → auth`（上层自动带下层）。
 
 ## 快速开始
 

@@ -32,6 +32,8 @@ auth = [
 ]
 # Project 参考切片用例。
 project = ["auth", "dms-domain/project"]
+# 组织架构用例 + 作用域权限解析。
+orgs = ["auth", "dms-domain/orgs"]
 
 [dev-dependencies]
 tokio = { workspace = true }

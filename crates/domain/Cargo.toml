@@ -20,3 +20,5 @@ uuid = { workspace = true, optional = true }
 auth = ["dep:serde", "dep:serde_json", "dep:chrono", "dep:async-trait", "dep:uuid"]
 # Project 参考切片（实体/事件/仓储端口）。
 project = ["auth"]
+# 组织架构（组织/团队/带作用域角色授予）。
+orgs = ["auth"]

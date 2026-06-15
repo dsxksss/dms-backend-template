@@ -451,7 +451,7 @@ dependencies = [
 
 [[package]]
 name = "dms-api"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "axum",
  "dms-application",
@@ -469,7 +469,7 @@ dependencies = [
 
 [[package]]
 name = "dms-application"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -485,7 +485,7 @@ dependencies = [
 
 [[package]]
 name = "dms-config"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "dms-core",
  "figment",
@@ -495,7 +495,7 @@ dependencies = [
 
 [[package]]
 name = "dms-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chrono",
  "metrics-exporter-prometheus",
@@ -507,7 +507,7 @@ dependencies = [
 
 [[package]]
 name = "dms-domain"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -519,7 +519,7 @@ dependencies = [
 
 [[package]]
 name = "dms-infrastructure"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "argon2",
  "async-trait",
@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "dms-server"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "axum",

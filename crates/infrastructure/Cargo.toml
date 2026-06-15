@@ -42,6 +42,8 @@ auth = [
 audit = ["multi-tenancy", "dep:serde_json", "dep:tokio"]
 # Project 切片仓储（同事务写状态+审计+发件箱）。
 project = ["auth", "audit", "dms-domain/project"]
+# 组织架构仓储 + 作用域权限解析。
+orgs = ["auth", "dms-domain/orgs", "dms-application/orgs"]
 
 [dev-dependencies]
 tokio = { workspace = true }

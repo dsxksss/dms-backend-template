@@ -15,6 +15,7 @@
 - [0003](adr/0003-multi-tenancy-rls.md) — 多租户：行级 + Postgres RLS
 - [0004](adr/0004-identity-federation.md) — 认证：身份联合 + JIT 账号映射
 - [0005](adr/0005-feature-tiers.md) — 复杂度分档（Cargo features）
+- [0006](adr/0006-org-hierarchy-and-scoped-permissions.md) — 组织架构与作用域权限（对标 Benchling）
 
 ## 评估备忘（调研结论，**未实现**，待业务需求明确）
 - [notes/field-permissions-and-custom-entities.md](notes/field-permissions-and-custom-entities.md)

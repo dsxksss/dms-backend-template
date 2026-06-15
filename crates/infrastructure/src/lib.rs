@@ -20,6 +20,8 @@ pub mod iam;
 
 #[cfg(feature = "audit")]
 pub mod audit;
+#[cfg(feature = "orgs")]
+pub mod orgs;
 #[cfg(feature = "audit")]
 pub mod outbox;
 #[cfg(feature = "project")]

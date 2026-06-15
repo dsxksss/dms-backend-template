@@ -26,3 +26,5 @@ dms-domain = { workspace = true, optional = true }
 auth = ["dms-application/auth", "dep:uuid"]
 # Project 参考切片：/v1/projects 路由 + AppState.projects。
 project = ["auth", "dms-application/project", "dep:dms-domain", "dms-domain/project"]
+# 组织架构：/v1/orgs、/v1/teams、成员、角色授予路由 + AppState.orgs。
+orgs = ["auth", "dms-application/orgs", "dep:dms-domain", "dms-domain/orgs"]

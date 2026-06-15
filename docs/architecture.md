@@ -40,14 +40,14 @@
 ```
 crates/core/src/         error · id (Id<T>) · ids (TenantId/UserId) · pagination · context · telemetry
 crates/config/src/       lib (AppConfig：figment 分层)
-crates/domain/src/       iam · ports · project                       # [auth]/[project] 档
-crates/application/src/  port/{health,auth} · auth(AuthService) · dto · token · project   # 业务模块 [auth]/[project] 档
+crates/domain/src/       iam · ports · project · orgs                # [auth]/[project]/[orgs] 档
+crates/application/src/  port/{health,auth} · auth(AuthService) · dto · token · project · orgs   # [auth]/[project]/[orgs]
 crates/infrastructure/src/  db/{mod,tenant} · health          # [database]/[multi-tenancy]
                             auth/{hasher,jwt,platform} · iam/{repos,bootstrap}   # [auth]
-                            audit · outbox · project           # [audit]/[project]
-crates/api/src/          error · health · state · extract(AuthContext) · v1/{auth,projects}
+                            audit · outbox · project · orgs    # [audit]/[project]/[orgs]
+crates/api/src/          error · health · state · extract(AuthContext) · v1/{auth,projects,orgs}
 bin/server/src/          main (组合根 + bootstrap 子命令)
-migrations/              core/ · tenancy/ · auth/ · audit/ · project/   # 按档分目录，预留版本区间
+migrations/              core/ · tenancy/ · auth/ · audit/ · project/ · orgs/   # 按档分目录，预留版本区间
 ```
 
 > 方括号标注该模块所属 Cargo feature 档；精简档（默认）只编译 core/config/application(port)/api/server。
@@ -79,6 +79,8 @@ infrastructure 的具体实现（如 `PgProjectRepository`）构造 application 
 - **多租户**：行级 + Postgres RLS，每请求事务设 `app.current_tenant`（见 ADR-0003）。
 - **可追溯**：审计日志 + `*_history` 表 + 事务性发件箱 + request_id 链路。
 - **认证**：身份联合（可插拔 IdentityProvider + JIT 账号映射，见 ADR-0004）。
+- **组织/权限**：`orgs` 档提供 租户→组织→团队 层级 + 带作用域角色授予（`role_grants`）+ 累积
+  权限解析（对标 Benchling，见 ADR-0006）；资源级权限按请求解析、不入 JWT。
 - **多环境**：figment 分层（`APP_ENV`：local/cloud/onprem）+ 同镜像配置驱动；交付（Docker/
   compose/Helm）见 [deployment.md](deployment.md)。
 - **复杂度分档**：Cargo features（`minimal`→`full`）按需编译 database/multi-tenancy/auth/

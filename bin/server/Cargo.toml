@@ -44,4 +44,10 @@ project = [
     "dms-application/project",
     "dms-api/project",
 ]
-full = ["database", "multi-tenancy", "auth", "audit", "project"]
+orgs = [
+    "auth",
+    "dms-infrastructure/orgs",
+    "dms-application/orgs",
+    "dms-api/orgs",
+]
+full = ["database", "multi-tenancy", "auth", "audit", "project", "orgs"]
