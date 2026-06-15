@@ -26,13 +26,13 @@ authors = ["DMS Team"]
 publish = false
 
 [workspace.dependencies]
-# ---- 内部 crate ----
-dms-core = { path = "crates/core" }
-dms-config = { path = "crates/config" }
-dms-domain = { path = "crates/domain" }
-dms-application = { path = "crates/application" }
-dms-infrastructure = { path = "crates/infrastructure" }
-dms-api = { path = "crates/api" }
+# ---- 内部 crate ----（带显式 version：避免 cargo-deny 将 path 依赖判为通配符）
+dms-core = { path = "crates/core", version = "0.2.0" }
+dms-config = { path = "crates/config", version = "0.2.0" }
+dms-domain = { path = "crates/domain", version = "0.2.0" }
+dms-application = { path = "crates/application", version = "0.2.0" }
+dms-infrastructure = { path = "crates/infrastructure", version = "0.2.0" }
+dms-api = { path = "crates/api", version = "0.2.0" }
 
 # ---- 异步运行时 / Web ----
 tokio = { version = "1", features = ["full"] }

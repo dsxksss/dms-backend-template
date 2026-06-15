@@ -18,6 +18,8 @@ allow = [
     "Zlib",
     "MPL-2.0",
     "CC0-1.0",
+    # webpki-roots（sqlx ring+webpki TLS 携带的 CA 根数据）使用此数据许可证。
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.8
 exceptions = []
