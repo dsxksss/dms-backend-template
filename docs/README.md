@@ -22,3 +22,5 @@
   — 字段级权限 + 用户自定义实体（含实测结论与成本分档建议）
 - [notes/datasets-huggingface-reference.md](notes/datasets-huggingface-reference.md)
   — 数据集模块对标 HuggingFace（Gitea+LFS + Parquet + DuckDB 低成本方案，含 PoC 实测）
+- [notes/prd-gap-analysis.md](notes/prd-gap-analysis.md)
+  — DMS 产品 PRD V1.0 ↔ 模板差距分析与目标架构（含模板调整 vs 业务代码划分）
