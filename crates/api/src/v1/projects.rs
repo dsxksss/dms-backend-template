@@ -5,8 +5,10 @@
 use axum::Json;
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
-use dms_application::project::{CreateProjectRequest, ProjectResponse, UpdateProjectRequest};
-use dms_core::{PageRequest, Paginated};
+use dms_application::project::{
+    AddMemberRequest, CreateProjectRequest, MemberResponse, ProjectResponse, UpdateProjectRequest,
+};
+use dms_core::{PageRequest, Paginated, UserId};
 use dms_domain::project::ProjectId;
 use serde::Deserialize;
 
@@ -69,5 +71,38 @@ pub async fn delete(
 ) -> ApiResult<StatusCode> {
     auth.require("project:write")?;
     state.projects.delete(&auth.ctx, id, q.version).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+pub async fn list_members(
+    State(state): State<AppState>,
+    auth: AuthContext,
+    Path(id): Path<ProjectId>,
+) -> ApiResult<Json<Vec<MemberResponse>>> {
+    auth.require("project:read")?;
+    let members = state.projects.list_members(auth.ctx.tenant_id, id).await?;
+    Ok(Json(
+        members.into_iter().map(MemberResponse::from).collect(),
+    ))
+}
+
+pub async fn add_member(
+    State(state): State<AppState>,
+    auth: AuthContext,
+    Path(id): Path<ProjectId>,
+    Json(req): Json<AddMemberRequest>,
+) -> ApiResult<(StatusCode, Json<MemberResponse>)> {
+    auth.require("project:write")?;
+    let member = state.projects.add_member(&auth.ctx, id, req).await?;
+    Ok((StatusCode::CREATED, Json(member.into())))
+}
+
+pub async fn remove_member(
+    State(state): State<AppState>,
+    auth: AuthContext,
+    Path((id, user_id)): Path<(ProjectId, UserId)>,
+) -> ApiResult<StatusCode> {
+    auth.require("project:write")?;
+    state.projects.remove_member(&auth.ctx, id, user_id).await?;
     Ok(StatusCode::NO_CONTENT)
 }

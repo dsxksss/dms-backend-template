@@ -4,13 +4,56 @@
 //! 携带 [`RequestContext`] 的写操作端口（供基础设施在同一事务内写审计与发件箱）。
 
 use async_trait::async_trait;
-use dms_core::{CoreResult, Id, PageRequest, Paginated, RequestContext, TenantId};
-use serde::Serialize;
+use dms_core::{CoreResult, Id, PageRequest, Paginated, RequestContext, TenantId, UserId};
+use serde::{Deserialize, Serialize};
 
 /// Project 的类型标记。
 pub enum ProjectMarker {}
 /// Project 强类型 ID。
 pub type ProjectId = Id<ProjectMarker>;
+
+/// 项目内成员角色（容器级结构角色，权限自 `Owner` 递减至 `Viewer`）。
+///
+/// 这是项目本地的协作角色，与 RBAC 的全局角色/`role_grants`（orgs 档）解耦。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ProjectRole {
+    Owner,
+    Manager,
+    Contributor,
+    Viewer,
+}
+
+impl ProjectRole {
+    /// 数据库存储用的字符串（与迁移的 CHECK 约束对齐）。
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ProjectRole::Owner => "owner",
+            ProjectRole::Manager => "manager",
+            ProjectRole::Contributor => "contributor",
+            ProjectRole::Viewer => "viewer",
+        }
+    }
+
+    /// 由数据库字符串解析（未知值返回 `None`）。
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "owner" => Some(ProjectRole::Owner),
+            "manager" => Some(ProjectRole::Manager),
+            "contributor" => Some(ProjectRole::Contributor),
+            "viewer" => Some(ProjectRole::Viewer),
+            _ => None,
+        }
+    }
+}
+
+/// 项目成员（用户 ↔ 项目，携带项目内角色）。
+#[derive(Debug, Clone, Serialize)]
+pub struct ProjectMember {
+    pub project_id: ProjectId,
+    pub user_id: UserId,
+    pub role: ProjectRole,
+}
 
 /// 项目实体。
 #[derive(Debug, Clone, Serialize)]
@@ -79,6 +122,38 @@ pub trait ProjectRepository: Send + Sync {
         ctx: &RequestContext,
         id: ProjectId,
         expected_version: i32,
+    ) -> CoreResult<()>;
+
+    /// 列出项目成员（按加入时间）。
+    async fn list_members(
+        &self,
+        tenant: TenantId,
+        project: ProjectId,
+    ) -> CoreResult<Vec<ProjectMember>>;
+
+    /// 查询某用户在项目内的角色（无成员关系返回 `None`）。供授权判定使用。
+    async fn member_role(
+        &self,
+        tenant: TenantId,
+        project: ProjectId,
+        user: UserId,
+    ) -> CoreResult<Option<ProjectRole>>;
+
+    /// 新增或更新成员角色（upsert）。
+    async fn upsert_member(
+        &self,
+        ctx: &RequestContext,
+        project: ProjectId,
+        user: UserId,
+        role: ProjectRole,
+    ) -> CoreResult<ProjectMember>;
+
+    /// 移除成员；不允许移除项目最后一名 `Owner`（返回冲突）。
+    async fn remove_member(
+        &self,
+        ctx: &RequestContext,
+        project: ProjectId,
+        user: UserId,
     ) -> CoreResult<()>;
 }
 

@@ -12,7 +12,7 @@
 | **multi-tenancy** | RLS 租户作用域（`begin_tenant_tx`）、`tenants` 迁移 | + uuid |
 | **auth** | 身份联合（密码 + 平台 token 交换）、JIT 映射、会话、`/v1/auth/*`、RBAC、IAM 迁移、`bootstrap` 子命令 | + domain, argon2, jsonwebtoken |
 | **audit** | 审计日志 + 事务性发件箱（含后台中继轮询投递） | + tokio |
-| **project** | `Project` 参考切片：CRUD + RLS + 审计 + 发件箱 + 行级历史 + 乐观锁 + 软删 | + domain::project |
+| **project** | `Project` 参考切片：CRUD + RLS + 审计 + 发件箱 + 行级历史 + 乐观锁 + 软删；**容器 + 成员**（owner/manager/contributor/viewer，创建者自动属主） | + domain::project |
 | **orgs** | 组织架构（对标 Benchling）：租户→组织→团队 + 资源协作者 + 带作用域角色授予 + 累积权限解析 | + domain::orgs |
 | **storage** | 对象存储：内容寻址 blob（sha256 + 散列分片 `<sha[0:2]>/<sha[2:4]>/<sha>` + 去重）；文件系统后端，S3/MinIO 可换 | + sha2/hex/tokio（**不依赖 database**） |
 | **full** | 以上全部 | 全部 |
@@ -48,7 +48,7 @@ migrations/core/      0001-0099   database       扩展、set_updated_at()
 migrations/tenancy/   0100-0199   multi-tenancy  app_current_tenant()、tenants、RLS 约定
 migrations/auth/      0200-0299   auth           users / external_identities / refresh_tokens / RBAC
 migrations/audit/     0300-0399   audit          audit_log / outbox
-migrations/project/   0400-0499   project        projects / projects_history（触发器）
+migrations/project/   0400-0499   project        projects / projects_history（触发器）/ project_members
 migrations/orgs/      0500-0599   orgs           organizations / teams / 成员 / role_grants
 ```
 

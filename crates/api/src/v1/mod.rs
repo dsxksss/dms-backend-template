@@ -28,6 +28,14 @@ pub fn router() -> Router<AppState> {
             get(projects::get)
                 .patch(projects::update)
                 .delete(projects::delete),
+        )
+        .route(
+            "/projects/{id}/members",
+            get(projects::list_members).post(projects::add_member),
+        )
+        .route(
+            "/projects/{id}/members/{user_id}",
+            axum::routing::delete(projects::remove_member),
         );
 
     #[cfg(feature = "orgs")]

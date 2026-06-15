@@ -5,8 +5,10 @@
 
 use std::sync::Arc;
 
-use dms_core::{CoreError, CoreResult, PageRequest, Paginated, RequestContext, TenantId};
-use dms_domain::project::{NewProject, Project, ProjectId, ProjectRepository, UpdateProject};
+use dms_core::{CoreError, CoreResult, PageRequest, Paginated, RequestContext, TenantId, UserId};
+use dms_domain::project::{
+    NewProject, Project, ProjectId, ProjectMember, ProjectRepository, ProjectRole, UpdateProject,
+};
 use serde::{Deserialize, Serialize};
 
 /// 创建项目请求。
@@ -44,6 +46,29 @@ impl From<Project> for ProjectResponse {
             name: p.name,
             description: p.description,
             version: p.version,
+        }
+    }
+}
+
+/// 新增/更新项目成员请求。
+#[derive(Debug, Deserialize)]
+pub struct AddMemberRequest {
+    pub user_id: UserId,
+    pub role: ProjectRole,
+}
+
+/// 项目成员响应。
+#[derive(Debug, Serialize)]
+pub struct MemberResponse {
+    pub user_id: UserId,
+    pub role: ProjectRole,
+}
+
+impl From<ProjectMember> for MemberResponse {
+    fn from(m: ProjectMember) -> Self {
+        Self {
+            user_id: m.user_id,
+            role: m.role,
         }
     }
 }
@@ -131,6 +156,37 @@ impl ProjectService {
     ) -> CoreResult<()> {
         self.repo.delete(ctx, id, expected_version).await
     }
+
+    /// 列出项目成员。
+    pub async fn list_members(
+        &self,
+        tenant: TenantId,
+        project: ProjectId,
+    ) -> CoreResult<Vec<ProjectMember>> {
+        self.repo.list_members(tenant, project).await
+    }
+
+    /// 新增/更新成员角色。
+    pub async fn add_member(
+        &self,
+        ctx: &RequestContext,
+        project: ProjectId,
+        req: AddMemberRequest,
+    ) -> CoreResult<ProjectMember> {
+        self.repo
+            .upsert_member(ctx, project, req.user_id, req.role)
+            .await
+    }
+
+    /// 移除成员（不可移除最后一名 owner）。
+    pub async fn remove_member(
+        &self,
+        ctx: &RequestContext,
+        project: ProjectId,
+        user: UserId,
+    ) -> CoreResult<()> {
+        self.repo.remove_member(ctx, project, user).await
+    }
 }
 
 #[cfg(test)]
@@ -146,6 +202,7 @@ mod tests {
     #[derive(Default)]
     struct MockProjectRepo {
         items: Mutex<HashMap<uuid::Uuid, Project>>,
+        members: Mutex<HashMap<(uuid::Uuid, uuid::Uuid), ProjectRole>>,
     }
 
     #[async_trait]
@@ -162,6 +219,13 @@ mod tests {
                 .lock()
                 .unwrap()
                 .insert(project.id.as_uuid(), project.clone());
+            // 创建者自动成为 owner（与真实实现一致）。
+            if let Some(uid) = ctx.actor.user_id() {
+                self.members
+                    .lock()
+                    .unwrap()
+                    .insert((project.id.as_uuid(), uid.as_uuid()), ProjectRole::Owner);
+            }
             Ok(project)
         }
 
@@ -216,6 +280,79 @@ mod tests {
                 return Err(CoreError::Conflict("version".into()));
             }
             guard.remove(&id.as_uuid());
+            Ok(())
+        }
+
+        async fn list_members(
+            &self,
+            _tenant: TenantId,
+            project: ProjectId,
+        ) -> CoreResult<Vec<ProjectMember>> {
+            let guard = self.members.lock().unwrap();
+            Ok(guard
+                .iter()
+                .filter(|((p, _), _)| *p == project.as_uuid())
+                .map(|((p, u), r)| ProjectMember {
+                    project_id: (*p).into(),
+                    user_id: (*u).into(),
+                    role: *r,
+                })
+                .collect())
+        }
+
+        async fn member_role(
+            &self,
+            _tenant: TenantId,
+            project: ProjectId,
+            user: UserId,
+        ) -> CoreResult<Option<ProjectRole>> {
+            Ok(self
+                .members
+                .lock()
+                .unwrap()
+                .get(&(project.as_uuid(), user.as_uuid()))
+                .copied())
+        }
+
+        async fn upsert_member(
+            &self,
+            _ctx: &RequestContext,
+            project: ProjectId,
+            user: UserId,
+            role: ProjectRole,
+        ) -> CoreResult<ProjectMember> {
+            self.members
+                .lock()
+                .unwrap()
+                .insert((project.as_uuid(), user.as_uuid()), role);
+            Ok(ProjectMember {
+                project_id: project,
+                user_id: user,
+                role,
+            })
+        }
+
+        async fn remove_member(
+            &self,
+            _ctx: &RequestContext,
+            project: ProjectId,
+            user: UserId,
+        ) -> CoreResult<()> {
+            let mut guard = self.members.lock().unwrap();
+            let role = guard
+                .get(&(project.as_uuid(), user.as_uuid()))
+                .copied()
+                .ok_or_else(|| CoreError::NotFound("member not found".into()))?;
+            if role == ProjectRole::Owner {
+                let owners = guard
+                    .iter()
+                    .filter(|((p, _), r)| *p == project.as_uuid() && **r == ProjectRole::Owner)
+                    .count();
+                if owners <= 1 {
+                    return Err(CoreError::Conflict("cannot remove the last owner".into()));
+                }
+            }
+            guard.remove(&(project.as_uuid(), user.as_uuid()));
             Ok(())
         }
     }
@@ -302,6 +439,52 @@ mod tests {
         assert!(matches!(
             svc.get(c.tenant_id, created.id).await.unwrap_err(),
             CoreError::NotFound(_)
+        ));
+    }
+
+    #[tokio::test]
+    async fn members_add_list_and_last_owner_guard() {
+        let svc = service();
+        let c = ctx();
+        let p = svc
+            .create(
+                &c,
+                CreateProjectRequest {
+                    name: "P".into(),
+                    description: String::new(),
+                },
+            )
+            .await
+            .unwrap();
+
+        // 创建者自动成为 owner。
+        let members = svc.list_members(c.tenant_id, p.id).await.unwrap();
+        assert_eq!(members.len(), 1);
+        assert_eq!(members[0].role, ProjectRole::Owner);
+
+        // 加一个 contributor → 共 2 人。
+        let u = UserId::new();
+        svc.add_member(
+            &c,
+            p.id,
+            AddMemberRequest {
+                user_id: u,
+                role: ProjectRole::Contributor,
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(svc.list_members(c.tenant_id, p.id).await.unwrap().len(), 2);
+
+        // 移除 contributor 正常。
+        svc.remove_member(&c, p.id, u).await.unwrap();
+        assert_eq!(svc.list_members(c.tenant_id, p.id).await.unwrap().len(), 1);
+
+        // 移除最后一名 owner → 冲突。
+        let owner = c.actor.user_id().unwrap();
+        assert!(matches!(
+            svc.remove_member(&c, p.id, owner).await.unwrap_err(),
+            CoreError::Conflict(_)
         ));
     }
 }
