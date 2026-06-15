@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+_模板已冻结于 0.1.0；后续条目为基于模板的业务功能。_
+
+## [0.1.0] - 2026-06-14 — 模板基线（冻结）
+
 ### Added
 
 - 工作区骨架与六边形分层（core/config/domain/application/infrastructure/api + server）。
