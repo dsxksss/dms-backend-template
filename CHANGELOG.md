@@ -5,6 +5,27 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-06-15 — 模板能力下沉（对齐 DMS PRD 的通用部分）
+
+### Added
+
+- **对象存储（`storage` feature，独立档）**：内容寻址 blob——sha256 + 散列分片
+  `<sha[0:2]>/<sha[2:4]>/<sha256>` + 原子写 + 去重。`BlobStore` 端口 + `FilesystemBlobStore`
+  实现（S3/MinIO 可替换），`StorageConfig` 配置。不依赖 database。
+- **Project 容器 + 成员**：`project_members`（owner/manager/contributor/viewer）+ RLS；
+  创建者自动成为 owner（同事务），移除最后一名 owner 有守卫，成员变更写审计。
+  端点 `/v1/projects/{id}/members`（GET/POST、`/{user_id}` DELETE）。结构化成员关系，
+  与 `orgs` 档的 `role_grants`（RBAC）解耦。
+- **字段级权限通用机制（`field-perms` feature，独立档）**：`FieldAccess`
+  （Visible/Masked/Hidden）响应裁剪 + `FieldPolicy` 端口（默认 `AllVisible`）。
+  具体敏感字段规则属业务，模板只提供机制。对应 `docs/notes` 验证的「应用层裁剪」最省档。
+- **默认角色 seed 机制**：声明式 `DEFAULT_ROLES`（owner/admin/member + 权限包）+
+  幂等 `seed_default_roles`；`bootstrap` 改为 seed 标准角色目录并授予首个用户 `owner`。
+
+### Changed
+
+- 工作区版本 0.2.0 → 0.3.0。
+
 ## [0.2.0] - 2026-06-14
 
 ### Added

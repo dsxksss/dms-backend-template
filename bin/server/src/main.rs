@@ -191,7 +191,8 @@ fn spawn_outbox_relay(config: &AppConfig) {
     });
 }
 
-/// `bootstrap` 子命令：创建初始租户 + 管理员（拥有全部权限）。
+/// `bootstrap` 子命令：创建初始租户、seed 标准角色（owner/admin/member），
+/// 并将首个用户授予 `owner`。
 #[cfg(feature = "auth")]
 async fn run_bootstrap(config: &AppConfig) -> anyhow::Result<()> {
     tracing::info!("running migrations before bootstrap");
@@ -217,7 +218,7 @@ async fn run_bootstrap(config: &AppConfig) -> anyhow::Result<()> {
             tenant_name: &name,
             email: &email,
             password: &password,
-            role_key: "admin",
+            role_key: "owner",
         },
     )
     .await

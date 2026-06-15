@@ -10,7 +10,7 @@
 | **minimal**（默认） | 纯 HTTP：`/healthz` `/readyz`(always ok) `/metrics`、分层配置、JSON 日志、RFC7807 错误 | core, config, application(port), api, server |
 | **database** | 连接池、迁移、DB 就绪探针 | + infrastructure(db), sqlx |
 | **multi-tenancy** | RLS 租户作用域（`begin_tenant_tx`）、`tenants` 迁移 | + uuid |
-| **auth** | 身份联合（密码 + 平台 token 交换）、JIT 映射、会话、`/v1/auth/*`、RBAC、IAM 迁移、`bootstrap` 子命令 | + domain, argon2, jsonwebtoken |
+| **auth** | 身份联合（密码 + 平台 token 交换）、JIT 映射、会话、`/v1/auth/*`、RBAC、IAM 迁移、标准角色 seed（owner/admin/member + 权限包）、`bootstrap` 子命令 | + domain, argon2, jsonwebtoken |
 | **audit** | 审计日志 + 事务性发件箱（含后台中继轮询投递） | + tokio |
 | **project** | `Project` 参考切片：CRUD + RLS + 审计 + 发件箱 + 行级历史 + 乐观锁 + 软删；**容器 + 成员**（owner/manager/contributor/viewer，创建者自动属主） | + domain::project |
 | **orgs** | 组织架构（对标 Benchling）：租户→组织→团队 + 资源协作者 + 带作用域角色授予 + 累积权限解析 | + domain::orgs |
