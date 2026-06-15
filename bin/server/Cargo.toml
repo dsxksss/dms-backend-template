@@ -50,4 +50,10 @@ orgs = [
     "dms-application/orgs",
     "dms-api/orgs",
 ]
-full = ["database", "multi-tenancy", "auth", "audit", "project", "orgs"]
+storage = [
+    "dep:dms-infrastructure",
+    "dms-infrastructure/storage",
+    "dms-application/storage",
+    "dms-api/storage",
+]
+full = ["database", "multi-tenancy", "auth", "audit", "project", "orgs", "storage"]

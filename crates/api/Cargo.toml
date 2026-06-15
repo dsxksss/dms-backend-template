@@ -28,3 +28,5 @@ auth = ["dms-application/auth", "dep:uuid"]
 project = ["auth", "dms-application/project", "dep:dms-domain", "dms-domain/project"]
 # 组织架构：/v1/orgs、/v1/teams、成员、角色授予路由 + AppState.orgs。
 orgs = ["auth", "dms-application/orgs", "dep:dms-domain", "dms-domain/orgs"]
+# 对象存储：AppState.storage（供业务文件管理使用）。
+storage = ["dms-application/storage"]

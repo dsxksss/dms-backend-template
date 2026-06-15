@@ -21,6 +21,8 @@ serde_json = { workspace = true, optional = true }
 argon2 = { workspace = true, optional = true }
 jsonwebtoken = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
+sha2 = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
 
 [features]
 # 基础数据库：连接池、迁移、就绪探针。
@@ -44,6 +46,8 @@ audit = ["multi-tenancy", "dep:serde_json", "dep:tokio"]
 project = ["auth", "audit", "dms-domain/project"]
 # 组织架构仓储 + 作用域权限解析。
 orgs = ["auth", "dms-domain/orgs", "dms-application/orgs"]
+# 对象存储：文件系统内容寻址 blob 存储（sha256 + 散列分片）。
+storage = ["dms-application/storage", "dep:sha2", "dep:hex", "dep:tokio"]
 
 [dev-dependencies]
 tokio = { workspace = true }

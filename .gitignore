@@ -20,3 +20,6 @@ Thumbs.db
 
 # 日志
 *.log
+
+# 运行时对象存储（blob 落盘目录，不提交）
+/data/

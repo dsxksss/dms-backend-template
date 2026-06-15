@@ -24,6 +24,7 @@ pub struct AppConfig {
     pub database: DatabaseConfig,
     pub auth: AuthConfig,
     pub observability: ObservabilityConfig,
+    pub storage: StorageConfig,
 }
 
 impl Default for AppConfig {
@@ -34,6 +35,7 @@ impl Default for AppConfig {
             database: DatabaseConfig::default(),
             auth: AuthConfig::default(),
             observability: ObservabilityConfig::default(),
+            storage: StorageConfig::default(),
         }
     }
 }
@@ -151,6 +153,25 @@ impl Default for ObservabilityConfig {
             format: LogFormat::default(),
             level: "info,sqlx=warn,tower_http=info".to_string(),
             metrics_enabled: true,
+        }
+    }
+}
+
+/// 对象存储配置。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
+pub struct StorageConfig {
+    /// 后端：当前支持 `fs`（文件系统）；S3/MinIO 可扩展。
+    pub backend: String,
+    /// 文件系统后端的根目录（内容寻址 blob 落盘位置）。
+    pub root: String,
+}
+
+impl Default for StorageConfig {
+    fn default() -> Self {
+        Self {
+            backend: "fs".to_string(),
+            root: "./data/blobs".to_string(),
         }
     }
 }

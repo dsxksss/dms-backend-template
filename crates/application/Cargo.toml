@@ -34,6 +34,8 @@ auth = [
 project = ["auth", "dms-domain/project"]
 # 组织架构用例 + 作用域权限解析。
 orgs = ["auth", "dms-domain/orgs"]
+# 对象存储端口（BlobStore）。
+storage = []
 
 [dev-dependencies]
 tokio = { workspace = true }

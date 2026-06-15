@@ -41,10 +41,10 @@
 crates/core/src/         error · id (Id<T>) · ids (TenantId/UserId) · pagination · context · telemetry
 crates/config/src/       lib (AppConfig：figment 分层)
 crates/domain/src/       iam · ports · project · orgs                # [auth]/[project]/[orgs] 档
-crates/application/src/  port/{health,auth} · auth(AuthService) · dto · token · project · orgs   # [auth]/[project]/[orgs]
+crates/application/src/  port/{health,auth,storage} · auth(AuthService) · dto · token · project · orgs   # [auth]/[project]/[orgs]/[storage]
 crates/infrastructure/src/  db/{mod,tenant} · health          # [database]/[multi-tenancy]
                             auth/{hasher,jwt,platform} · iam/{repos,bootstrap}   # [auth]
-                            audit · outbox · project · orgs    # [audit]/[project]/[orgs]
+                            audit · outbox · project · orgs · storage   # [audit]/[project]/[orgs]/[storage]
 crates/api/src/          error · health · state · extract(AuthContext) · v1/{auth,projects,orgs}
 bin/server/src/          main (组合根 + bootstrap 子命令)
 migrations/              core/ · tenancy/ · auth/ · audit/ · project/ · orgs/   # 按档分目录，预留版本区间

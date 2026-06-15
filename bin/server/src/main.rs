@@ -46,6 +46,8 @@ async fn main() -> anyhow::Result<()> {
                 config: Arc::new(config.clone()),
                 metrics,
                 health,
+                #[cfg(feature = "storage")]
+                storage: build_blob_store(&config),
             }
         }
         #[cfg(feature = "database")]
@@ -76,6 +78,8 @@ async fn main() -> anyhow::Result<()> {
                 projects: build_project_service(&pool),
                 #[cfg(feature = "orgs")]
                 orgs: build_org_service(&pool),
+                #[cfg(feature = "storage")]
+                storage: build_blob_store(&config),
             }
         }
     };
@@ -163,6 +167,14 @@ fn build_org_service(pool: &sqlx::PgPool) -> Arc<dms_application::orgs::OrgServi
         pool.clone(),
     ));
     Arc::new(dms_application::orgs::OrgService::new(orgs, grants))
+}
+
+/// 组装对象存储（当前文件系统后端；S3/MinIO 可替换 BlobStore 实现）。
+#[cfg(feature = "storage")]
+fn build_blob_store(config: &AppConfig) -> Arc<dyn dms_application::port::BlobStore> {
+    Arc::new(dms_infrastructure::storage::FilesystemBlobStore::new(
+        &config.storage.root,
+    ))
 }
 
 /// 启动发件箱中继后台任务（拥有者连接，绕过 RLS 扫描全部租户）。

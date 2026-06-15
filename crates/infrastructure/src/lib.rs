@@ -26,3 +26,5 @@ pub mod orgs;
 pub mod outbox;
 #[cfg(feature = "project")]
 pub mod project;
+#[cfg(feature = "storage")]
+pub mod storage;

@@ -6,7 +6,11 @@
 #[cfg(feature = "auth")]
 mod auth;
 mod health;
+#[cfg(feature = "storage")]
+mod storage;
 
 #[cfg(feature = "auth")]
 pub use auth::{AccessClaims, IdentityProvider, PasswordHasher, TokenIssuer, VerifiedIdentity};
 pub use health::{AlwaysReady, HealthProbe};
+#[cfg(feature = "storage")]
+pub use storage::{BlobInfo, BlobStore};

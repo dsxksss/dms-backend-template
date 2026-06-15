@@ -9,6 +9,8 @@ use std::sync::Arc;
 use dms_application::auth::AuthService;
 #[cfg(feature = "orgs")]
 use dms_application::orgs::OrgService;
+#[cfg(feature = "storage")]
+use dms_application::port::BlobStore;
 use dms_application::port::HealthProbe;
 #[cfg(feature = "project")]
 use dms_application::project::ProjectService;
@@ -33,4 +35,7 @@ pub struct AppState {
     /// 组织架构用例服务（组织/团队/成员/角色授予/权限解析）。
     #[cfg(feature = "orgs")]
     pub orgs: Arc<OrgService>,
+    /// 对象存储（内容寻址 blob 存储；业务文件管理在其上记录元数据）。
+    #[cfg(feature = "storage")]
+    pub storage: Arc<dyn BlobStore>,
 }
