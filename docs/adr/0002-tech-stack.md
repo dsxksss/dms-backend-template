@@ -30,5 +30,9 @@
 - 成本：Rust 学习曲线与编译时长高于脚本语言；以 workspace 分 crate + cargo-chef
   缓存缓解编译时长。
 
-详见 [ADR-0003（多租户 RLS）](0003-multi-tenancy-rls.md) 与
-[ADR-0004（身份联合）](0004-identity-federation.md)（随对应里程碑补充）。
+详见 [ADR-0003（多租户 RLS）](0003-multi-tenancy-rls.md)、
+[ADR-0004（身份联合）](0004-identity-federation.md)、[ADR-0005（复杂度分档）](0005-feature-tiers.md)。
+
+> **实现说明（2026-06-14）**：模板默认采用 **运行时查询**（`sqlx::query`/`query_as`），
+> 构建无需活库、天然适配 CI 与 air-gapped；`query!` 编译期校验 + `.sqlx` 缓存作为可选增强。
+> OpenAPI（utoipa）文档化为**计划中的可选 feature，当前未内置**。

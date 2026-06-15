@@ -10,10 +10,10 @@
 |---|---|
 | 语言 | Rust 1.94 (edition 2024) |
 | Web | Axum 0.8 + tower-http |
-| 数据库 | PostgreSQL 16 + SQLx 0.8（编译期校验 SQL） |
+| 数据库 | PostgreSQL 16 + SQLx 0.8（默认运行时查询，构建无需活库；`query!` 编译期校验为可选） |
 | 多租户 | 行级 + Postgres RLS |
 | 认证 | 身份联合（内置密码 + 专有平台 token 交换，JIT 账号映射） |
-| 文档 | utoipa（OpenAPI，挂载 `/docs`） |
+| API 文档 | OpenAPI / `/docs`（计划中的可选 feature，当前未内置） |
 | 配置 | figment 分层（`default → {env} → ENV`） |
 | 观测 | tracing(JSON) + Prometheus 指标 |
 
@@ -75,12 +75,14 @@ curl -s localhost:8080/v1/auth/login -H 'content-type: application/json' \
 ## 常用命令
 
 ```bash
-cargo build --workspace            # 构建
-cargo test  --workspace            # 测试（集成测试用 testcontainers 起真实 PG）
-cargo fmt --all -- --check         # 格式
-cargo clippy --workspace --all-targets -- -D warnings   # Lint
-cargo deny check                   # 供应链门禁
-cargo sqlx prepare --workspace     # 生成 .sqlx 离线缓存（提交后支持无库构建）
+cargo build  --workspace                               # 构建（默认精简档；分档见 docs/tiers.md）
+cargo test   --workspace --all-features                # 单元 + mock（集成测试默认 #[ignore]）
+cargo fmt    --all -- --check                          # 格式
+cargo clippy --workspace --all-features --all-targets -- -D warnings   # Lint
+cargo deny check                                       # 供应链门禁
+# 真实库集成测试：
+# TEST_DATABASE_URL=postgres://dms:dms@127.0.0.1:5433/dms \
+#   cargo test -p dms-infrastructure --features project -- --ignored
 ```
 
 ## 多环境
@@ -91,4 +93,4 @@ cargo sqlx prepare --workspace     # 生成 .sqlx 离线缓存（提交后支持
 | 云端 | `cloud` | `config/cloud.toml` | 多租户 SaaS |
 | 私有化 | `onprem` | `config/onprem.toml` | 单租户，可离线 |
 
-同一镜像，行为由 `APP_ENV` + 配置 + Cargo features（`cloud` / `onprem`）决定。
+同一镜像，**运行行为**由 `APP_ENV` + 配置决定；**编译进哪些能力**由 Cargo features（`minimal`…`full`，见 [docs/tiers.md](docs/tiers.md)）决定。`cloud`/`onprem` 是环境配置（`APP_ENV` + Helm values），不是 Cargo feature。
