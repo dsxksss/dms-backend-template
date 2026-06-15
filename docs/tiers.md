@@ -15,10 +15,11 @@
 | **project** | `Project` 参考切片：CRUD + RLS + 审计 + 发件箱 + 行级历史 + 乐观锁 + 软删；**容器 + 成员**（owner/manager/contributor/viewer，创建者自动属主） | + domain::project |
 | **orgs** | 组织架构（对标 Benchling）：租户→组织→团队 + 资源协作者 + 带作用域角色授予 + 累积权限解析 | + domain::orgs |
 | **storage** | 对象存储：内容寻址 blob（sha256 + 散列分片 `<sha[0:2]>/<sha[2:4]>/<sha>` + 去重）；文件系统后端，S3/MinIO 可换 | + sha2/hex/tokio（**不依赖 database**） |
+| **field-perms** | 字段级权限**通用机制**：`FieldAccess`(Visible/Masked/Hidden) 响应裁剪 + `FieldPolicy` 端口（默认 `AllVisible`）；具体敏感字段规则属业务 | + serde_json（**纯 application 库能力**） |
 | **full** | 以上全部 | 全部 |
 
 依赖关系：`project → auth → multi-tenancy → database`；`audit → database`；`orgs → auth`；
-`storage` **独立**（不依赖 database，纯 blob 存储）。开启上层会自动带上下层。
+`storage`、`field-perms` 均**独立**（不依赖 database）。开启上层会自动带上下层。
 
 ## 构建 / 运行
 

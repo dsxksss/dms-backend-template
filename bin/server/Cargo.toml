@@ -56,4 +56,15 @@ storage = [
     "dms-application/storage",
     "dms-api/storage",
 ]
-full = ["database", "multi-tenancy", "auth", "audit", "project", "orgs", "storage"]
+# 字段级权限通用机制（仅 application 层库能力，无需 infra/api 装配）。
+field-perms = ["dms-application/field-perms"]
+full = [
+    "database",
+    "multi-tenancy",
+    "auth",
+    "audit",
+    "project",
+    "orgs",
+    "storage",
+    "field-perms",
+]

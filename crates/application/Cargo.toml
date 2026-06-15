@@ -36,6 +36,9 @@ project = ["auth", "dms-domain/project"]
 orgs = ["auth", "dms-domain/orgs"]
 # 对象存储端口（BlobStore）。
 storage = []
+# 字段级权限通用机制（FieldAccess 裁剪 + FieldPolicy 端口）。
+field-perms = ["dep:serde_json"]
 
 [dev-dependencies]
 tokio = { workspace = true }
+uuid = { workspace = true }

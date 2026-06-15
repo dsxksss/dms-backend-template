@@ -13,6 +13,8 @@
 pub mod auth;
 #[cfg(feature = "auth")]
 pub mod dto;
+#[cfg(feature = "field-perms")]
+pub mod field_perms;
 #[cfg(feature = "orgs")]
 pub mod orgs;
 pub mod port;
